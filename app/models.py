@@ -62,6 +62,8 @@ class Device(db.Model):
     #__bind_key__ = 'kakou'
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(64))
+    city_id = db.Column(db.Integer, default=1)
+    type_id = db.Column(db.Integer, default=1)
     type = db.Column(db.String(128), default='')
     application = db.Column(db.String(128), default='')
     modified = db.Column(db.DateTime)
@@ -70,9 +72,11 @@ class Device(db.Model):
     ps = db.Column(db.String(256), default='')
     banned = db.Column(db.Integer, default=0)
 
-    def __init__(self, ip, type, application, modified, last_access,
-                 status, ps, banned=0):
+    def __init__(self, ip, city_id, type_id, type, application, modified,
+                 last_access, status, ps, banned=0):
         self.ip = ip
+        self.city_id = city_id
+        self.type_id = type_id
         self.type = type
         self.application = application
         self.modified = modified

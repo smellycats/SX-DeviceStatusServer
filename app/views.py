@@ -278,6 +278,8 @@ def device_list():
             item = {}
             item['id'] = i.id
             item['ip'] = i.ip
+            item['city_id'] = i.city_id
+            item['type_id'] = i.type_id
             item['type'] = i.type
             item['application'] = i.application
             item['modified'] = str(i.modified)
@@ -301,6 +303,8 @@ def device_get(ip):
         if dev:
             item['id'] = dev.id
             item['ip'] = dev.ip
+            item['city_id'] = dev.city_id
+            item['type_id'] = dev.type_id
             item['type'] = dev.type
             item['application'] = dev.application
             item['modified'] = str(dev.modified)
@@ -329,6 +333,8 @@ def device_check_get(num):
             item = {}
             item['id'] = i.id
             item['ip'] = i.ip
+            item['city_id'] = i.city_id
+            item['type_id'] = i.type_id
             item['type'] = i.type
             item['application'] = i.application
             item['modified'] = str(i.modified)
