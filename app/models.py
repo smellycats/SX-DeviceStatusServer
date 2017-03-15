@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
+import pytz
+
 import arrow
 
 from . import db
+
+
+class AwareDateTime(db.TypeDecorator):
+    '''Results returned as aware datetimes, not naive ones.
+    '''
+
+    impl = db.DateTime
+
+    def process_result_value(self, value, dialect):
+        return value.replace(tzinfo=pytz.utc)
 
 
 class Users(db.Model):
