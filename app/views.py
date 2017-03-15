@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 from functools import wraps
-import shutil
-import cStringIO
-import datetime
 
 import arrow
 import requests
 from flask import g, request, make_response, jsonify, abort
-#from flask_restful import reqparse, abort, Resource
 from passlib.hash import sha256_crypt
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from . import db, app, auth, cache, limiter, logger, access_logger
 from models import *
-#from help_func import *
 import helper
 
 
@@ -324,12 +319,12 @@ def device_get(ip):
 #@auth.login_required
 def device_check_get(num):
     try:
+        t = arrow.now('PRC').replace(minutes=-1).datetime.replace(tzinfo=None)
         dev_list = db.session.query(Device).filter(
-            Device.modified <= arrow.now().replace(minutes=-1).datetime,
-            Device.last_access <= arrow.now().replace(minutes=-1).datetime,
+            Device.modified <= t, Device.last_access <= t,
             Device.banned==0).order_by(Device.modified).limit(num).all()
         items = []
-        t = datetime.datetime.now()
+        now = arrow.now('PRC').datetime.replace(tzinfo=None)
         for i in dev_list:
             item = {}
             item['id'] = i.id
@@ -340,7 +335,7 @@ def device_check_get(num):
             item['status'] = i.status
             item['ps'] = i.ps
             items.append(item)
-            i.last_access = t
+            i.last_access = now
         db.session.commit()
         
 	return jsonify({'total_count': len(items), 'items': items}), 200
@@ -361,7 +356,7 @@ def device_post():
         for i in request.json['info']:
             dev = Device.query.filter_by(ip=i['ip']).first()
             if dev:
-                dev.modified = datetime.datetime.now()
+                dev.modified = arrow.now('PRC').datetime.replace(tzinfo=None)
                 if i['status'] is True:
                     dev.status = 1
                 else:
