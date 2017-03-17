@@ -272,7 +272,11 @@ def token_post():
 #@auth.login_required
 def device_list():
     try:
-        dev_list = Device.query.filter_by(banned=0).all()
+        type = request.args.get('type', None)
+        if type is None:
+            dev_list = Device.query.filter_by(banned=0).all()
+        else:
+            dev_list = Device.query.filter_by(banned=0, type_id=type).all()
         items = []
         for i in dev_list:
             item = {}
@@ -283,7 +287,10 @@ def device_list():
             item['type'] = i.type
             item['application'] = i.application
             item['modified'] = str(i.modified)
-            item['status'] = i.status
+            if i.status == 0:
+                item['status'] = False
+            else:
+                item['status'] = True
             item['ps'] = i.ps
             items.append(item)
         
@@ -308,12 +315,16 @@ def device_get(ip):
             item['type'] = dev.type
             item['application'] = dev.application
             item['modified'] = str(dev.modified)
-            item['status'] = dev.status
+            if dev.status == 0:
+                item['status'] = False
+            else:
+                item['status'] = True
             item['ps'] = dev.ps
             item['banned'] = dev.banned
         
 	return jsonify(item), 200
     except Exception as e:
+        print e
 	logger.error(e)
 
 
@@ -324,9 +335,18 @@ def device_get(ip):
 def device_check_get(num):
     try:
         t = arrow.now('PRC').replace(minutes=-1).datetime.replace(tzinfo=None)
-        dev_list = db.session.query(Device).filter(
-            Device.modified <= t, Device.last_access <= t,
-            Device.banned==0).order_by(Device.modified).limit(num).all()
+        type = request.args.get('type', None)
+        if type is None:
+            dev_list = db.session.query(Device).filter(
+                Device.modified<=t,
+                Device.last_access<=t,
+                Device.banned==0).order_by(Device.modified).limit(num).all()
+        else:
+            dev_list = db.session.query(Device).filter(
+                Device.modified<=t,
+                Device.last_access<=t,
+                Device.type_id==type,
+                Device.banned==0).order_by(Device.modified).limit(num).all()
         items = []
         now = arrow.now('PRC').datetime.replace(tzinfo=None)
         for i in dev_list:
@@ -338,7 +358,10 @@ def device_check_get(num):
             item['type'] = i.type
             item['application'] = i.application
             item['modified'] = str(i.modified)
-            item['status'] = i.status
+            if i.status == 0:
+                item['status'] = False
+            else:
+                item['status'] = True
             item['ps'] = i.ps
             items.append(item)
             i.last_access = now
@@ -346,7 +369,6 @@ def device_check_get(num):
         
 	return jsonify({'total_count': len(items), 'items': items}), 200
     except Exception as e:
-        print e
 	logger.error(e)
 
 
