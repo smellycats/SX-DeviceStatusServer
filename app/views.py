@@ -38,33 +38,6 @@ def verify_pw(username, password):
         return sha256_crypt.verify(password, user.password)
     return False
 
-
-def verify_token(f):
-    """token验证装饰器"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if app.config['TOKEN_OPEN']:
-            g.uid = helper.ip2num(request.remote_addr)
-            g.scope = set(['all'])
-        else:
-            if not request.headers.get('Access-Token'):
-                return jsonify({'status': '401.6',
-                                'message': 'missing token header'}), 401
-            token_result = verify_auth_token(request.headers['Access-Token'],
-                                             app.config['SECRET_KEY'])
-            if not token_result:
-                return jsonify({'status': '401.7',
-                                'message': 'invalid token'}), 401
-            elif token_result == 'expired':
-                return jsonify({'status': '401.8',
-                                'message': 'token expired'}), 401
-            g.uid = token_result['uid']
-            g.scope = set(token_result['scope'])
-
-        return f(*args, **kwargs)
-    return decorated_function
-
-
 def verify_scope(scope):
     def scope(f):
         """权限范围验证装饰器"""
@@ -220,50 +193,6 @@ def scope_options():
 def scope_get():
     items = map(helper.row2dict, Scope.query.all())
     return jsonify({'total_count': len(items), 'items': items}), 200
-
-    
-@app.route('/token', methods=['OPTIONS'])
-@limiter.limit('5000/hour')
-def token_options():
-    return jsonify(), 200
-
-@app.route('/token', methods=['POST'])
-@limiter.limit('5/minute')
-def token_post():
-    try:
-        if request.json is None:
-            return jsonify({'message': 'Problems parsing JSON'}), 415
-        if not request.json.get('username', None):
-            error = {
-                'resource': 'Token',
-                'field': 'username',
-                'code': 'missing_field'
-            }
-            return jsonify({'message': 'Validation Failed', 'errors': error}), 422
-        if not request.json.get('password', None):
-            error = {'resource': 'Token', 'field': 'password',
-                     'code': 'missing_field'}
-            return jsonify({'message': 'Validation Failed', 'errors': error}), 422
-        user = Users.query.filter_by(username=request.json.get('username'),
-                                     banned=0).first()
-        if not user:
-            return jsonify({'message': 'username or password error'}), 422
-        if not sha256_crypt.verify(request.json.get('password'), user.password):
-            return jsonify({'message': 'username or password error'}), 422
-
-        s = Serializer(app.config['SECRET_KEY'],
-                       expires_in=app.config['EXPIRES'])
-        token = s.dumps({'uid': user.id, 'scope': user.scope.split(',')})
-    except Exception as e:
-        print e
-
-    return jsonify({
-        'uid': user.id,
-        'access_token': token,
-        'token_type': 'self',
-        'scope': user.scope,
-        'expires_in': app.config['EXPIRES']
-    }), 201
 
 
 @app.route('/device', methods=['GET'])
