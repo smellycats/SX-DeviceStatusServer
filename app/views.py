@@ -202,10 +202,13 @@ def scope_get():
 def device_list():
     try:
         type = request.args.get('type', None)
-        if type is None:
-            dev_list = Device.query.filter_by(banned=0).all()
-        else:
-            dev_list = Device.query.filter_by(banned=0, type_id=type).all()
+        city = request.args.get('city', None)
+        dev_list = Device.query.filter_by(banned=0)
+        if type is not None:
+            dev_list = dev_list.filter_by(type_id=type)
+        if city is not None:
+            dev_list = dev_list.filter_by(city_id=city)
+        dev_list = dev_list.all()
         items = []
         for i in dev_list:
             item = {}
@@ -265,17 +268,15 @@ def device_check_get(num):
     try:
         t = arrow.now('PRC').replace(minutes=-1).datetime.replace(tzinfo=None)
         type = request.args.get('type', None)
-        if type is None:
-            dev_list = db.session.query(Device).filter(
-                Device.modified<=t,
-                Device.last_access<=t,
-                Device.banned==0).order_by(Device.modified).limit(num).all()
-        else:
-            dev_list = db.session.query(Device).filter(
-                Device.modified<=t,
-                Device.last_access<=t,
-                Device.type_id==type,
-                Device.banned==0).order_by(Device.modified).limit(num).all()
+        city = request.args.get('city', None)
+        dev_list = db.session.query(Device).filter(
+            Device.modified<=t, Device.last_access<=t,
+            Device.banned==0).order_by(Device.modified)
+        if type is not None:
+            dev_list = dev_list.filter(Device.type_id==type)
+        if city is not None:
+            dev_list = dev_list.filter(Device.city_id==city)
+        dev_list = dev_list.limit(num).all()
         items = []
         now = arrow.now('PRC').datetime.replace(tzinfo=None)
         for i in dev_list:
