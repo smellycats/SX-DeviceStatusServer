@@ -95,7 +95,6 @@ class City(db.Model):
 class Device(db.Model):
     """设备状态表"""
     __tablename__ = 'device'
-    #__bind_key__ = 'kakou'
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(64))
     city_id = db.Column(db.Integer, default=1)
