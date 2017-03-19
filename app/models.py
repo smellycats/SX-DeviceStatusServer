@@ -56,6 +56,42 @@ class Scope(db.Model):
         return '<Scope %r>' % self.id
 
 
+class Type(db.Model):
+    """设备类型"""
+    __tablename__ = 'type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128))
+    ps = db.Column(db.String(256), default='')
+    banned = db.Column(db.Integer, default=0)
+
+    def __init__(self, name, ps='', banned=0):
+        self.name = name
+        self.ps = ps
+        self.banned = banned
+
+    def __repr__(self):
+        return '<Type %r>' % self.id
+
+
+class City(db.Model):
+    """县区"""
+    __tablename__ = 'city'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128))
+    alias = db.Column(db.String(128))
+    ps = db.Column(db.String(256), default='')
+    banned = db.Column(db.Integer, default=0)
+
+    def __init__(self, name, alias, ps='', banned=0):
+        self.name = name
+        self.alias = alias
+        self.ps = ps
+        self.banned = banned
+
+    def __repr__(self):
+        return '<City %r>' % self.id
+
+
 class Device(db.Model):
     """设备状态表"""
     __tablename__ = 'device'

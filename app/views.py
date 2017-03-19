@@ -325,4 +325,45 @@ def device_post():
 	logger.error(e)
 
 
+@app.route('/type', methods=['GET'])
+@limiter.limit('600/minute')
+#@limiter.exempt
+#@auth.login_required
+def type_list():
+    try:
+        type_list = Type.query.filter_by(banned=0).all()
+        items = []
+        for i in type_list:
+            item = {}
+            item['id'] = i.id
+            item['name'] = i.name
+            item['ps'] = i.ps
+            item['banned'] = i.banned
+            items.append(item)
+        
+	return jsonify({'total_count': len(items), 'items': items}), 200
+    except Exception as e:
+	logger.error(e)
+
+
+@app.route('/city', methods=['GET'])
+@limiter.limit('600/minute')
+#@limiter.exempt
+#@auth.login_required
+def city_list():
+    try:
+        city_list = City.query.filter_by(banned=0).all()
+        items = []
+        for i in city_list:
+            item = {}
+            item['id'] = i.id
+            item['name'] = i.name
+            item['alias'] = i.name
+            item['ps'] = i.ps
+            item['banned'] = i.banned
+            items.append(item)
+        
+	return jsonify({'total_count': len(items), 'items': items}), 200
+    except Exception as e:
+	logger.error(e)
 

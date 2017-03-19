@@ -24,6 +24,14 @@ class ModelTestCase(unittest.TestCase):
             Device.modified<=t, Device.last_access<=t, Device.type_id==2,
             Device.banned==0).order_by(Device.modified).limit(10).all()
         self.assertEqual(dev[0].type_id, 2)
+
+    def test_get_type(self):
+        type = Type.query.filter_by().all()
+        self.assertEqual(type[1].name, u'工控机')
+
+    def test_get_city(self):
+        city = City.query.filter_by().all()
+        self.assertEqual(city[1].alias, 'zk')
         
 
 
