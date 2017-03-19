@@ -39,6 +39,21 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 from . import views
 
+@app.after_request
+def after_request(response):
+    """访问信息写入日志"""
+    access_logger.info('{0} - - [{1}] "{2} {3} HTTP/1.1" {4} {5}'.format(
+        request.headers.get("X-Real-IP", request.remote_addr),
+        arrow.now('PRC').format('DD/MMM/YYYY:HH:mm:ss ZZ'),
+        request.method, request.url, response.status_code,
+        response.content_length))
+    response.headers['Server'] = app.config['HEADER_SERVER']
+    #response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    #response.headers['Access-Control-Allow-Origin'] = '*'
+    #response.headers['Access-Control-Allow-Methods'] = 'GET, POST'
+    #response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
+
+    return response
 
 @app.errorhandler(400)
 def bad_request(error):
