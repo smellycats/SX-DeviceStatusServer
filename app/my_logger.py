@@ -49,6 +49,6 @@ def access_logging(log_file_name):
     access_logger = logging.getLogger('access')
 
     rthandler = logging.handlers.RotatingFileHandler(
-        log_file_name, maxBytes=100 * 1024 * 1024, backupCount=10)
+        log_file_name, maxBytes=20 * 1024 * 1024, backupCount=10)
     access_logger.setLevel(logging.INFO)
     access_logger.addHandler(rthandler)
