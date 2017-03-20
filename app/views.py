@@ -87,6 +87,7 @@ def user_get(user_id):
     else:
         abort(404)
 
+
 @app.route('/user/<int:user_id>', methods=['POST', 'PATCH'])
 @limiter.limit('5000/hour')
 @auth.login_required
@@ -123,6 +124,7 @@ def user_patch(user_id):
         'date_modified': str(user.date_modified),
         'banned': user.banned
     }), 201
+
 
 @app.route('/user', methods=['POST'])
 @limiter.limit('5000/hour')
@@ -203,11 +205,14 @@ def device_list():
     try:
         type = request.args.get('type', None)
         city = request.args.get('city', None)
+        ip = request.args.get('ip', None)
         dev_list = Device.query.filter_by(banned=0)
         if type is not None:
             dev_list = dev_list.filter_by(type_id=type)
         if city is not None:
             dev_list = dev_list.filter_by(city_id=city)
+        if ip is not None:
+            dev_list = dev_list.filter_by(ip=ip)
         dev_list = dev_list.all()
         items = []
         for i in dev_list:
@@ -231,32 +236,32 @@ def device_list():
 	logger.error(e)
 
 
-@app.route('/device/<string:ip>', methods=['GET'])
+@app.route('/device/<int:id>', methods=['GET'])
 @limiter.limit('600/minute')
 #@limiter.exempt
 #@auth.login_required
-def device_get(ip):
+def device_get(id):
     try:
-        dev = Device.query.filter_by(ip=ip).first()
+        dev = Device.query.filter_by(id=id).first()
+        if dev is None:
+            return jsonify({}), 404
         item = {}
-        if dev:
-            item['id'] = dev.id
-            item['ip'] = dev.ip
-            item['city_id'] = dev.city_id
-            item['type_id'] = dev.type_id
-            item['type'] = dev.type
-            item['application'] = dev.application
-            item['modified'] = str(dev.modified)
-            if dev.status == 0:
-                item['status'] = False
-            else:
-                item['status'] = True
-            item['ps'] = dev.ps
-            item['banned'] = dev.banned
+        item['id'] = dev.id
+        item['ip'] = dev.ip
+        item['city_id'] = dev.city_id
+        item['type_id'] = dev.type_id
+        item['type'] = dev.type
+        item['application'] = dev.application
+        item['modified'] = str(dev.modified)
+        if dev.status == 0:
+            item['status'] = False
+        else:
+            item['status'] = True
+        item['ps'] = dev.ps
+        item['banned'] = dev.banned
         
 	return jsonify(item), 200
     except Exception as e:
-        print e
 	logger.error(e)
 
 
@@ -302,7 +307,53 @@ def device_check_get(num):
 	logger.error(e)
 
 
-@app.route('/device', methods=['POST'])
+@app.route('/device/<int:id>', methods=['POST', 'PATCH'])
+@limiter.limit('600/minute')
+#@limiter.exempt
+#@auth.login_required
+def device_patch(id):
+    try:
+        if not request.json:
+            return jsonify({'message': 'Problems parsing JSON'}), 415
+        if request.json.get('status', None) is None:
+            error = {
+                'resource': 'device',
+                'field': 'status',
+                'code': 'missing_field'
+            }
+            return jsonify({'message': 'Validation Failed',
+                            'errors': error}), 422
+
+        dev = Device.query.filter_by(id=id).first()
+        if dev is None:
+            return jsonify({}), 404
+        dev.modified = arrow.now('PRC').datetime.replace(tzinfo=None)
+        if request.json['status'] is True:
+            dev.status = 1
+        else:
+            dev.status = 0
+        db.session.commit()
+
+        item = {}
+        item['id'] = dev.id
+        item['ip'] = dev.ip
+        item['city_id'] = dev.city_id
+        item['type_id'] = dev.type_id
+        item['type'] = dev.type
+        item['application'] = dev.application
+        item['modified'] = str(dev.modified)
+        if dev.status == 0:
+            item['status'] = False
+        else:
+            item['status'] = True
+        item['ps'] = dev.ps
+        item['banned'] = dev.banned
+        
+	return jsonify(item), 201
+    except Exception as e:
+	logger.error(e)
+
+@app.route('/device_multi', methods=['POST'])
 @limiter.limit('600/minute')
 #@limiter.exempt
 #@auth.login_required
@@ -312,8 +363,8 @@ def device_post():
             return jsonify({'message': 'Problems parsing JSON'}), 415
 
         for i in request.json['info']:
-            dev = Device.query.filter_by(ip=i['ip']).first()
-            if dev:
+            dev = Device.query.filter_by(id=i['id']).first()
+            if dev is not None:
                 dev.modified = arrow.now('PRC').datetime.replace(tzinfo=None)
                 if i['status'] is True:
                     dev.status = 1
@@ -359,7 +410,7 @@ def city_list():
             item = {}
             item['id'] = i.id
             item['name'] = i.name
-            item['alias'] = i.name
+            item['alias'] = i.alias
             item['ps'] = i.ps
             item['banned'] = i.banned
             items.append(item)
