@@ -1,5 +1,5 @@
 from tests.test_model import *
-#from tests.test_request import *
+from tests.test_request import *
 
 
 if __name__ == "__main__":
