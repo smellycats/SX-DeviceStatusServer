@@ -1,1 +1,1 @@
-docker run -it -d --restart=always --name device_status_ser --privileged=truep 8018:8018 -v /home/core/GitHub:/home centos-python/smsser gunicorn -c /home/SX-DeviceStatusServer/gun.py --chdir /home/SX-DeviceStatusServer run:app
+docker run -it -d --restart=always --name device_status_ser --privileged=true -p 8018:8018 -v /home/core/GitHub:/home centos-python/smsser gunicorn -c /home/SX-DeviceStatusServer/gun.py --chdir /home/SX-DeviceStatusServer run:app
